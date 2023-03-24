@@ -1,0 +1,70 @@
+version: "3.9"
+services:
+  pantograph:
+    build: ./pygengraph
+    restart: never
+    volumes:
+      - ./data/visdata:/data # Change to the directory where you would like to persistently hold visualisation data
+      - ./data/examples:/examples
+    profiles:
+      - pantograph
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - 4321:6379
+    volumes:
+      - ./data/db:/data # Change to the directory where you would like to persistently hold Redis DB dump file.
+      # - ./redis/redis.conf:/usr/local/etc/redis/redis.conf # Uncomment if you want to use custom Redis config
+    # command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ] # Uncomment if you want to use custom Redis config
+
+  api:
+    build: ./api
+    container_name: pantograph-api
+    restart: always
+    environment:
+    - REDIS_HOST=redis
+    links:
+      - redis
+    depends_on:
+      - redis
+
+  vis:
+    build: ./vis
+    container_name: pantograph-vis
+    restart: always
+    ports:
+        - 8888:80
+        # - 443:443
+    volumes:
+      - ./data/visdata:/usr/share/nginx/html/data # Change to the directory where you would like to persistently hold visualisation data
+      - ./vis/nginx.conf:/etc/nginx/nginx.conf:ro 
+      - ./vis/conf.d/:/etc/nginx/conf.d/:ro 
+      # - challenge:/var/www/certbot:ro # uncomment for HTTPS
+      # - sslcerts:/etc/nginx/ssl/:ro # uncomment for HTTPS
+    depends_on:
+      - api
+    links:
+      - api
+  # Uncomment the rest to maintain Let's Encrypt certificates for HTTPS.
+  # certbot:
+  #   profiles:
+  #       - certbot
+  #   image: certbot/certbot:latest
+  #   volumes:
+  #       - challenge:/var/www/certbot/:rw
+  #       - sslcerts:${CERTBOT_CERTFOLDER}:rw
+  #       - ./certbot/:/scripts/:ro
+  #   environment:
+  #       - SSLHOST=${SSLHOST}
+  #       - LE_USER=${LE_USER}
+  #       - CERTFOLDER=${CERTBOT_CERTFOLDER}
+  #   entrypoint: /bin/sh /scripts/certbotRun.sh
+
+  # To use HTTPs in ./vis/conf.d file `main.conf` should be removed (or renamed to `main.conf.b`)
+  # At the same time files `challenge.conf.b` and `site.conf.b` should be renamed to `challenge.conf` and `site.conf`
+  # Also host name should be changed to your actual host name in `challenge.conf`, `site.conf` and in `.env`.
+  # Also, do not forget to insert your Let's Encrypt registered email in `.env`.
