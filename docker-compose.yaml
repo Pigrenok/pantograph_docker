@@ -6,6 +6,7 @@ services:
     volumes:
       - ./data/visdata:/data # Change to the directory where you would like to persistently hold visualisation data
       - ./data/examples:/examples
+    user: ${UID_GID:-0:0}
     profiles:
       - pantograph
     depends_on:
