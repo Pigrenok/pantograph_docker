@@ -6,11 +6,11 @@ RUN mkdir /pygengraph
 
 WORKDIR /pygengraph
 
-# The next two commands should be substituted by either copy from directory with cloned repo or with git clone command from github
+# Use this option if you want to use local copy of pygengraph repo, which should be in a directory `pygengraph` next to the Dockerfile
+# ADD pygengraph /app_git
+# RUN git clone /app_git .
 
-ADD pygengraph /app_git
-
-RUN git clone /app_git .
+RUN git clone https://github.com/Pigrenok/pygengraph.git .
 
 RUN pip install .
 

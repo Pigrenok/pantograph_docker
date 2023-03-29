@@ -8,10 +8,11 @@ RUN mkdir /app
 
 WORKDIR /app
 
-# The next two commands should be substituted by either copy from directory with cloned repo or with git clone command from github
-ADD Schematize /app_git
+# Use this option if you want to use local copy of pygengraph repo, which should be in a directory `Schematize` next to the Dockerfile
+# ADD Schematize /app_git
+# RUN git clone /app_git .
 
-RUN git clone /app_git .
+RUN git clone https://github.com/Pigrenok/pantograph_visual.git .
 
 RUN rm -rf public/data
 
@@ -32,4 +33,3 @@ RUN mkdir /etc/nginx/ssl/
 RUN chmod +x /docker-entrypoint.d/50-nginx-setting-updater.sh
 
 COPY --from=nodejs /app/build /usr/share/nginx/html
-
