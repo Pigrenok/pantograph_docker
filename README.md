@@ -1,5 +1,7 @@
 # Pantograph graph processing and visualisation docker infrastructure
 
+This Docker Compose infrastructure allows a user to easily deploy [Pantograph Visualisation tool](https://github.com/Pigrenok/pantograph_visual) (including the React App as well as DB with metadata and related API to access this DB). It also contains an on-demand service to use `pantograph` command line tool (and underlying [pyGenGraph](https://github.com/Pigrenok/pygengraph) python package) which can process genome graphs and export them to visualisation tool.
+
 ## Running Pantograph Visualisation tool with Redis DB and DB API.
 
 This repo present an easy way to deploy both Pantograph graph visualisation tool (with its metadata DB and API interface) as well as pyGenGraph python package
@@ -21,13 +23,13 @@ After that just in the main directory where the repo was cloned, just do
 docker compose up -d
 ```
 
-That is it. Now just head to `http://localhost:8888` and the app is there. There are a couple of examples available in the Pantograph repo (!!!link), which you can download and
-try it on. If it will not find data index file, it will not run.
+That is it. Now just head to `http://localhost:8888` and the app is there. 
+By default there is no data coming with this repo. There are a couple of examples available in the [Pantograph Visual repo](https://github.com/Pigrenok/pantograph_visual/tree/master/public/data), which you can download, put it into `./data/visdata` directory in this repo and try it on. Alternatively, run the examples for Pantograph processing tool below and it will create the same examples.
 
 Also, it is set up to use with unsecured HTTP web-server. If you would like to set up sequred SSL server, uncomment marked (with comments) lines in 
 `docker-compose.yaml` and read comments at the bottom of the file.
 
-You will need to rerun certbot regularly to renew your certificates.
+You will need to rerun certbot regularly to renew your certificates or set in on cron.
 
 ## Processing graphs using pyGenGraph command line tool `pantograph`
 
@@ -41,6 +43,13 @@ docker compose run pantograph --help
 
 To get what this command line interface has to offer. Details are available in pyGenGraph repo. `pantograph` container will not run automatically with `docker compose up` and it needs to be run manually with specific parameters. The following examples gives the idea how to use it:
 
+Please note, by deafult the tool in docker runs under root user (UID 0, GID 0). All files created using the processing tool on mounted volumes will be created with root ownership, but will have read/write permission for all. If you want all your files to be created with ownership of your user on your host system, you need to set an environment variable `UID_GID` to have `<your user ID>:<your group ID>`, e.g. `1000:1000`. To set it to your current user and group, just run the following command in terminal
+
+```bash
+export UID_GID=$(id -u):$(id -g)
+```
+
+or add it to your `.bashrc` (for bash shell) to have it always set in any terminal session.
 
 ## Examples
 
@@ -104,8 +113,8 @@ Then change generated file `settings_export.yaml`, which should contain the foll
 projectID: paths_genegraph
 projectName: Sample gene graph
 caseDict:
-    Main: paths_genegraph_Main.gfa
-pathToIndex: /examples/visdata
+    Main: path_genegraph_Main.gfa
+pathToIndex: /data
 pathToGraphs: /examples/gene_graph
 redisHost: redis
 isSeq: False
@@ -135,7 +144,7 @@ projectID: nucleotide_graph
 projectName: "Sample nucleotide graph"
 caseDict:
     Main: paths_presentation_sorted.gfa
-pathToIndex: /examples/visdata
+pathToIndex: /data
 pathToGraphs: /examples/nucleotide_graph
 redisHost: 'redis'
 zoomLevels: [1,2,4]
